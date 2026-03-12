@@ -30,7 +30,7 @@ As a user, I want to see all my existing todos immediately when I open the appli
 
 **Acceptance Scenarios**:
 
-1. **Given** the user has previously created todos, **When** the user opens the application, **Then** all existing todos are displayed in a list showing each todo's description and completion status.
+1. **Given** the user has previously created todos, **When** the user opens the application, **Then** all existing todos are displayed in a list ordered oldest first (earliest created at top), showing each todo's description and completion status.
 2. **Given** the user has no todos, **When** the user opens the application, **Then** a friendly empty state message is displayed indicating there are no tasks yet and encouraging the user to add one.
 3. **Given** the application is loading todo data, **When** the user opens the application, **Then** a loading indicator is displayed until the data is fully loaded.
 4. **Given** the data cannot be retrieved due to an error, **When** the user opens the application, **Then** a clear error message is displayed with an option to retry.
@@ -73,15 +73,15 @@ As a user, I want to mark a todo as complete so that I can track my progress and
 
 ### User Story 4 - Delete a Todo (Priority: P2)
 
-As a user, I want to permanently remove a todo from my list so that I can keep my task list clean and focused on relevant items.
+As a user, I want to permanently remove a todo from my list with a single click (no confirmation dialog) so that I can keep my task list clean and focused on relevant items with minimal friction.
 
 **Why this priority**: Deletion is essential for list hygiene. Without it, the list grows unbounded and becomes unusable over time.
 
-**Independent Test**: Can be fully tested by clicking/tapping a todo's delete control and verifying the todo is removed from the list and does not reappear after a page refresh.
+**Independent Test**: Can be fully tested by clicking/tapping a todo's delete control and verifying the todo is immediately removed from the list (with no confirmation prompt) and does not reappear after a page refresh.
 
 **Acceptance Scenarios**:
 
-1. **Given** a todo exists in the list, **When** the user deletes it, **Then** the todo is immediately removed from the list.
+1. **Given** a todo exists in the list, **When** the user clicks the delete control, **Then** the todo is immediately removed from the list with no confirmation dialog or intermediate step.
 2. **Given** the user has deleted a todo, **When** they refresh the page, **Then** the deleted todo does not reappear.
 3. **Given** the server is unreachable, **When** the user tries to delete a todo, **Then** a clear error message is displayed and the todo remains in the list.
 
@@ -115,12 +115,12 @@ As a user, I want the application to work well on both my phone and my desktop c
 
 ### Functional Requirements
 
-- **FR-001**: System MUST display all existing todos when the application is opened, showing each todo's description and completion status.
+- **FR-001**: System MUST display all existing todos when the application is opened, ordered oldest first (earliest created at top), showing each todo's description and completion status.
 - **FR-002**: System MUST allow users to create a new todo by providing a text description.
 - **FR-003**: System MUST validate that a todo description is non-empty and does not exceed 300 characters before accepting it.
 - **FR-004**: System MUST allow users to toggle the completion status of any todo between active and completed.
 - **FR-005**: System MUST visually distinguish completed todos from active todos so status is apparent at a glance.
-- **FR-006**: System MUST allow users to permanently delete any todo from the list.
+- **FR-006**: System MUST allow users to permanently delete any todo from the list with a single click; no confirmation dialog or undo step is required.
 - **FR-007**: System MUST persist all todo data (creation, completion, deletion) on the server so that changes survive page refreshes and browser restarts.
 - **FR-008**: System MUST display an appropriate empty state when no todos exist.
 - **FR-009**: System MUST display a loading indicator while todo data is being fetched.
@@ -129,7 +129,7 @@ As a user, I want the application to work well on both my phone and my desktop c
 - **FR-012**: System MUST provide a responsive layout that works on viewports from 320px to 1920px wide.
 - **FR-013**: System MUST handle concurrent user actions (rapid adds, deletes, toggles) without data loss or UI corruption.
 - **FR-014**: System MUST prevent duplicate submissions when an action is already in progress.
-- **FR-015**: System MUST expose a server-side API that supports creating, reading, updating, and deleting todos.
+- **FR-015**: System MUST expose a server-side API that supports creating, reading, toggling completion status, and deleting todos. Text editing is not supported in this version.
 - **FR-016**: System MUST preserve user input when a create action fails, so the user can retry without retyping.
 
 ### Key Entities
@@ -149,13 +149,25 @@ As a user, I want the application to work well on both my phone and my desktop c
 - **SC-007**: All interactive elements are accessible via keyboard navigation and meet WCAG 2.1 Level AA contrast requirements.
 - **SC-008**: 90% of first-time users can complete all core task-management actions (add, view, complete, delete) on their first attempt without assistance.
 
+## Clarifications
+
+### Session 2026-03-12
+
+- Q: Backend stack selection? → A: Node.js / Express + SQLite (file-based, zero-config DB)
+- Q: Todo display order? → A: Oldest first (earliest created at top — natural insertion order)
+- Q: Edit todo text after creation? → A: No edit — toggle completion is the only update action; text editing is out of scope for this version
+- Q: Delete interaction pattern? → A: Immediate delete — single click removes the todo, no confirmation step
+
 ## Assumptions
 
 - This is a single-user application for the initial version. There is no authentication, user accounts, or multi-user data separation. The architecture should not prevent adding these features later.
 - The todo description maximum length is 300 characters — sufficient for a short task description while preventing abuse or UI overflow.
-- Todos are displayed in a single flat list (no categories, folders, or grouping).
+- Todos are displayed in a single flat list (no categories, folders, or grouping), ordered oldest first (earliest created at top — natural insertion order).
 - There is no offline-first or local-storage caching strategy for the initial version; the application requires a server connection to function.
 - The application does not support task prioritization, due dates, labels, or notifications in this version.
+- Editing a todo's text description after creation is explicitly out of scope for this version. The only modification action on an existing todo is toggling its completion status.
 - The backend API will follow RESTful conventions as a reasonable default for this type of application.
+- The backend is implemented with Node.js / Express and uses SQLite as the database (file-based, zero-config). This aligns with the project's simplicity principle and requires no external database server.
 - Standard web application performance expectations apply (sub-second interactions, page load under a few seconds).
 - The creation timestamp is recorded automatically by the system and is not user-editable.
+- Deleting a todo is an immediate, single-click action with no confirmation dialog or undo step. This favors speed and simplicity over accidental-deletion protection in the initial version.
